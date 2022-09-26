@@ -17,8 +17,14 @@ pub struct TableroSinProcesar {
 }
 
 impl TableroSinProcesar {
-    pub fn new(file_path: &String) -> TableroSinProcesar {
-        let contents = read_to_string(file_path).expect("Error al abrir el archivo");
+    // Dado un path crea un tablero sin procesar.
+    // Puede fallar en caso de no existir el archivo
+    pub fn new(file_path: &String) -> Result<TableroSinProcesar, String> {
+        let contents = match read_to_string(file_path) {
+            Err(_) => return Err("Error al abrir el archivo".to_string()),
+            Ok(x) => x,
+        };
+
         let mut tablero = HashMap::new();
         let mut x = 0;
         let mut y = 0;
@@ -37,9 +43,10 @@ impl TableroSinProcesar {
                 _ => {}
             }
         }
-        TableroSinProcesar { tablero }
+        Ok(TableroSinProcesar { tablero })
     }
 
+    // Dado un tablero lo transforma y crea un tablero procesado
     pub fn procesar(self) -> tablero_procesado::TableroProcesado {
         let mut tablero = HashMap::new();
 
@@ -67,6 +74,7 @@ impl TableroSinProcesar {
         tablero_procesado::TableroProcesado { tablero }
     }
 
+    // Funcion auxiliar para contar la cantidad de adyacentes de una posicion
     fn cant_adya(&self, x: i32, y: i32) -> u8 {
         //Tomo '.' en el caso que no exista esa posicion
         let values = vec![
@@ -76,5 +84,11 @@ impl TableroSinProcesar {
             self.tablero.get(&(x, y - 1)).unwrap_or(&PUNTO),
         ];
         values.iter().filter(|&c| **c == ASTER).count() as u8
+    }
+    #[allow(dead_code)]
+    // Dada una posicion devuelve el valor del tablero asociado
+    // Falla en caso de no existir en esa posicion
+    pub fn get(&self, x: i32, y: i32) -> Option<&u8> {
+        self.tablero.get(&(x, y))
     }
 }
